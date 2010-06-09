@@ -1,0 +1,4 @@
+#LiveCSSEditor-panel { display: block !important; position: fixed !important; top: 0px !important; right: 20px !important; background-color: #cef !important; -webkit-border-bottom-right-radius: 5px !important; -webkit-border-bottom-left-radius: 5px !important; border-bottom: 1px solid #999 !important; font: normal 12px arial, verdana, sans-serif !important;  z-index: 1002 !important; }
+#LiveCSSEditor-panel div { padding: 10px !important; margin: 0 !important; }
+#LiveCSSEditor-panel h2 { margin: 0 !important; padding: 0 !important; color: #000 !important; font: normal 16px arial, verdana, sans-serif !important; }
+#LiveCSSEditor-panel #LiveCSSEditor-code { font-family: "Courier new", monospaced !important; padding: 5px !important; }
