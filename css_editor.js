@@ -1,5 +1,5 @@
 var LiveCSSEditor = function() {
-  var head = document.getElementsByTagName('body')[0];
+  var head = document.getElementsByTagName('head')[0];
 
   this.enabled = false;
   this.cssCache = '';
@@ -8,7 +8,7 @@ var LiveCSSEditor = function() {
     var objPanel, objHeader, objTextArea, objContainer;
 
     objHeader = document.createElement('h2');
-    objHeader.innerHTML = 'Live CSS Editor';
+    objHeader.innerHTML = 'Live CSS';
 
     objTextArea = document.createElement('textarea');
     objTextArea.setAttribute('id','LiveCSSEditor-code');
@@ -19,7 +19,6 @@ var LiveCSSEditor = function() {
     
     objPanel = document.createElement('div');
     objPanel.setAttribute('id','LiveCSSEditor-panel');
-//    objPanel.setAttribute('style','display: none;');
     objPanel.appendChild(objContainer);
 
     document.body.appendChild(objPanel);
@@ -30,26 +29,6 @@ var LiveCSSEditor = function() {
     obj.id = 'LiveCSSEditor-PageCSS';
     obj.setAttribute("type", "text/css");
     head.appendChild(obj);
-  }
-  
-  function _addPageStyles() {
-    var objs = document.getElementsByTagName('link'), urls = [];
-    for(var i in objs) {
-      if (objs.hasOwnProperty(i)) {
-        var href = objs[i].href;
-        if (typeof href !== "undefined" && href.indexOf('LiveCSS') === -1) {
-          urls.push(href);
-          objs[i].parentNode.removeChild(objs[i]);
-        }
-      }
-    }
-    if (urls.length > 0) {
-      var url = 'http://query.yahooapis.com/v1/public/yql?q=select%20p.content%20from%20html%20where%20url%20in%20("' + escape(urls.join('", "')) + '")&format=json&callback=LiveCSSEditor.loadExternalPageStyles';
-      var obj = document.createElement('script');
-      obj.src = url;
-      obj.setAttribute('type','text/javascript');
-      head.appendChild(obj);
-    }
   }
 
   function _fillStyleTag(css) {
@@ -69,34 +48,22 @@ var LiveCSSEditor = function() {
   function _autoUpdate() {
     var source = document.getElementById('LiveCSSEditor-code');
     /* Don't bother replacing the CSS if it hasn't changed */
-    if (this.cssCache === source.value) { return }
+    if (this.cssCache === source.value) { return false; }
     _fillStyleTag(source.value);
   }
-  
+
   function _startAutoUpdate() {
     setInterval(_autoUpdate,1000);
   }
-  
-  function addExternalPageStyles(items) {
-    var content = '';
-    for(var i in items) {
-      content += items[i].p;
-    }
-    content += "\n /* Your CSS */\n\n" ;
-    content += this.cssCache;
-    var target = document.getElementById('LiveCSSEditor-code');
-    target.value = content;
-  }
-  
+
   function _init() {
     this.enabled = true;
     _addStyleTag();
     _fillStyleTag();
     _addEditorPane();
     _startAutoUpdate();
-    // _addPageStyles();
   }
-  
+
   function _removeEditor() {
     var obj = document.getElementById('LiveCSSEditor-PageCSS');
     obj.parentElement.removeChild(obj);
@@ -104,7 +71,7 @@ var LiveCSSEditor = function() {
     obj.parentElement.removeChild(obj);
     this.enabled = false;
   }
-  
+
   return {
     loadExternalPageStyles: function (r) {
       if (r.query && r.query.results && r.query.results.body) {
