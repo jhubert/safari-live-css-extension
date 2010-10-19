@@ -1,10 +1,10 @@
-var LiveCSSEditor = function() {
+var LiveCSSEditor = (function () {
   var head = document.getElementsByTagName('head')[0];
 
   this.enabled = false;
   this.cssCache = '';
 
-  function _addEditorPane() {
+  function addEditorPane() {
     var objPanel, objHeader, objTextArea, objContainer;
 
     objHeader = document.createElement('h2');
@@ -24,76 +24,72 @@ var LiveCSSEditor = function() {
     document.body.appendChild(objPanel);
   }
 
-  function _addStyleTag() {
+  function addStyleTag() {
     var obj = document.createElement('style');
     obj.id = 'LiveCSSEditor-PageCSS';
     obj.setAttribute("type", "text/css");
     head.appendChild(obj);
   }
 
-  function _fillStyleTag(css) {
-    var obj = document.getElementById('LiveCSSEditor-PageCSS');
+  function fillStyleTag(css) {
+    var txt, obj = document.getElementById('LiveCSSEditor-PageCSS');
     if (obj.styleSheet) {   // IE
       obj.styleSheet.cssText = css;
     } else {                // the world
       if (obj.lastChild) {
         obj.removeChild(obj.lastChild);
       }
-      var txt = document.createTextNode(css);
+      txt = document.createTextNode(css);
       obj.appendChild(txt);
     }
     this.cssCache = css;
   }
 
-  function _autoUpdate() {
+  function autoUpdate() {
     var source = document.getElementById('LiveCSSEditor-code');
     /* Don't bother replacing the CSS if it hasn't changed */
     if (this.cssCache === source.value) { return false; }
-    _fillStyleTag(source.value);
+    fillStyleTag(source.value);
   }
 
-  function _startAutoUpdate() {
-    setInterval(_autoUpdate,1000);
+  function startAutoUpdate() {
+    setInterval(autoUpdate,1000);
   }
 
-  function _init() {
+  function init() {
     this.enabled = true;
-    _addStyleTag();
-    _fillStyleTag();
-    _addEditorPane();
-    _startAutoUpdate();
+    addStyleTag();
+    fillStyleTag();
+    addEditorPane();
+    startAutoUpdate();
   }
 
-  function _removeEditor() {
-    var obj = document.getElementById('LiveCSSEditor-PageCSS');
-    obj.parentElement.removeChild(obj);
-    var obj = document.getElementById('LiveCSSEditor-panel');
-    obj.parentElement.removeChild(obj);
+  function removeEditor() {
+    var css = document.getElementById('LiveCSSEditor-PageCSS'), 
+        panel = document.getElementById('LiveCSSEditor-panel');
+    css.parentElement.removeChild(css);
+    panel.parentElement.removeChild(panel);
     this.enabled = false;
   }
 
   return {
-    loadExternalPageStyles: function (r) {
-      if (r.query && r.query.results && r.query.results.body) {
-        addExternalPageStyles(r.query.results.body);
-      }
-    },
     startIt: function() {
       if (this.enabled) {
-        _removeEditor();
+        removeEditor();
       } else {
-        _init();        
+        init();        
       }
     },
     stopIt: function() {
-      _removeEditor();
+      removeEditor();
     }
   };
-}();
+}());
 
 function handleMessage(msgEvent) {
-  var messageName = msgEvent.name;
-  var messageData = msgEvent.message;
+  var messageName = msgEvent.name,
+      messageData = msgEvent.message;
+
   if (messageName === "LiveCSSEditor") { 
     if (messageData === "stop") {
       LiveCSSEditor.stopIt();
