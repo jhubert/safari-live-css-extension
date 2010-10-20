@@ -1,100 +1,107 @@
 var LiveCSSEditor = (function () {
-  var head = document.getElementsByTagName('head')[0];
+  var is_enabled = false,
+      cssCache = '',
+      timer = null;
 
-  this.enabled = false;
-  this.cssCache = '';
+  function get(id) {
+    return document.getElementById('LiveCSSEditor-' + id); 
+  }
+
+  function toggleBottom() {
+    var panel = get('panel');
+    if (panel.className.indexOf('bottom') === -1) {
+      panel.className += ' bottom';
+    } else {
+      panel.className = panel.className.replace(' bottom', '');
+    }
+  }
+
+  function removeEditor() {
+    if (confirm('This will erase the changes you have made. Are you sure you want to do this?')) {
+      var css = get('PageCSS'), 
+          panel = get('panel');
+
+      clearInterval(timer);
+      css.parentElement.removeChild(css);
+      panel.parentElement.removeChild(panel);
+      is_enabled = false;
+    }
+  }
+
+  function activateButtons() {
+    var bottomButton = get('bot'),
+        closeButton = get('close');
+
+    bottomButton.onclick = toggleBottom;
+    closeButton.onclick = removeEditor;
+  }
 
   function addEditorPane() {
-    var objPanel, objHeader, objTextArea, objContainer;
-
-    objHeader = document.createElement('h2');
-    objHeader.innerHTML = 'Live CSS';
-
-    objTextArea = document.createElement('textarea');
-    objTextArea.setAttribute('id','LiveCSSEditor-code');
-
-    objContainer = document.createElement('div');
-    objContainer.appendChild(objHeader);
-    objContainer.appendChild(objTextArea);
-    
-    objPanel = document.createElement('div');
-    objPanel.setAttribute('id','LiveCSSEditor-panel');
-    objPanel.appendChild(objContainer);
+    var objPanel = document.createElement('div');
+    objPanel.setAttribute('id', 'LiveCSSEditor-panel');
+    objPanel.innerHTML = '<div id="LiveCSSEditor-actions"><div id="LiveCSSEditor-close">Bottom</div><div id="LiveCSSEditor-bot">Bottom</div></div><div id="LiveCSSEditor-pad"><div id="LiveCSSEditor-label">Live CSS Editor</div><textarea id="LiveCSSEditor-code"></textarea></div>';
 
     document.body.appendChild(objPanel);
+    
+    activateButtons();
   }
 
   function addStyleTag() {
-    var obj = document.createElement('style');
+    var head = document.getElementsByTagName('head')[0],
+        obj = document.createElement('style');
+
     obj.id = 'LiveCSSEditor-PageCSS';
     obj.setAttribute("type", "text/css");
     head.appendChild(obj);
   }
 
   function fillStyleTag(css) {
-    var txt, obj = document.getElementById('LiveCSSEditor-PageCSS');
-    if (obj.styleSheet) {   // IE
-      obj.styleSheet.cssText = css;
-    } else {                // the world
-      if (obj.lastChild) {
-        obj.removeChild(obj.lastChild);
-      }
-      txt = document.createTextNode(css);
-      obj.appendChild(txt);
-    }
-    this.cssCache = css;
+    var obj = get('PageCSS');
+    obj.innerHTML = css;
+    cssCache = css;
   }
 
   function autoUpdate() {
-    var source = document.getElementById('LiveCSSEditor-code');
+    var source = get('code');
     /* Don't bother replacing the CSS if it hasn't changed */
-    if (this.cssCache === source.value) { return false; }
+    if (cssCache === source.value) { 
+      return false; 
+    }
     fillStyleTag(source.value);
   }
 
   function startAutoUpdate() {
-    setInterval(autoUpdate,1000);
+    timer = setInterval(autoUpdate, 1000);
   }
 
   function init() {
-    this.enabled = true;
     addStyleTag();
     fillStyleTag();
     addEditorPane();
+    is_enabled = true;
     startAutoUpdate();
   }
 
-  function removeEditor() {
-    var css = document.getElementById('LiveCSSEditor-PageCSS'), 
-        panel = document.getElementById('LiveCSSEditor-panel');
-    css.parentElement.removeChild(css);
-    panel.parentElement.removeChild(panel);
-    this.enabled = false;
-  }
-
   return {
-    startIt: function() {
-      if (this.enabled) {
-        removeEditor();
-      } else {
-        init();        
-      }
+    startIt: function () {
+      init();
     },
-    stopIt: function() {
+    stopIt: function () {
       removeEditor();
+    },
+    enabled: function () {
+      return is_enabled;
     }
   };
 }());
 
 function handleMessage(msgEvent) {
-  var messageName = msgEvent.name,
-      messageData = msgEvent.message;
+  var messageName = msgEvent.name;
 
   if (messageName === "LiveCSSEditor") { 
-    if (messageData === "stop") {
+    if (LiveCSSEditor.enabled() === true) {
       LiveCSSEditor.stopIt();
-    }
-    if (messageData === "start") {
+    } else {
       LiveCSSEditor.startIt();
     }
   }
